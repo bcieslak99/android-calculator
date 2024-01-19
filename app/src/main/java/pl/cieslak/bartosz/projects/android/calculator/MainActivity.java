@@ -8,20 +8,38 @@ import android.widget.Button;
 
 public class MainActivity extends AppCompatActivity
 {
+    private Button aboutButton = null;
+    private Button basicCalculatorButton = null;
+    private Button advancedCalculatorButton = null;
+    private Button exitButton = null;
+
+    private void initButtons()
+    {
+        this.basicCalculatorButton = findViewById(R.id.basic_calculator);
+        this.advancedCalculatorButton = findViewById(R.id.advanced_calculator);
+        this.aboutButton = findViewById(R.id.about);
+        this.exitButton = findViewById(R.id.exitButtonFromApp);
+
+        this.basicCalculatorButton.setOnClickListener(view ->
+        {
+            Intent aboutActivity = new Intent(getApplicationContext(), BasicCalculator.class);
+            startActivity(aboutActivity);
+        });
+
+        this.aboutButton.setOnClickListener(view ->
+        {
+            Intent aboutActivity = new Intent(getApplicationContext(), About.class);
+            startActivity(aboutActivity);
+        });
+
+        this.exitButton.setOnClickListener(view -> finish());
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        final Button ABOUT_BUTTON = findViewById(R.id.about);
-        final Button BASIC_CALCULATOR_BUTTON = findViewById(R.id.basic_calculator);
-        final Button ADVANCED_CALCULATOR_BUTTON = findViewById(R.id.advanced_calculator);
-
-        ABOUT_BUTTON.setOnClickListener(view ->
-        {
-            Intent aboutActivity = new Intent(getApplicationContext(), About.class);
-            startActivity(aboutActivity);
-        });
+        initButtons();
     }
 }

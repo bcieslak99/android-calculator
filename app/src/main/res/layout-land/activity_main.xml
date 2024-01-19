@@ -20,7 +20,7 @@
 
     <LinearLayout
         android:layout_width="500dp"
-        android:layout_height="160dp"
+        android:layout_height="210dp"
         android:layout_marginTop="50dp"
         android:orientation="vertical"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,6 +44,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="O aplikacji" />
+
+        <Button
+            android:id="@+id/exitButtonFromApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Wyjdź" />
 
     </LinearLayout>
 
