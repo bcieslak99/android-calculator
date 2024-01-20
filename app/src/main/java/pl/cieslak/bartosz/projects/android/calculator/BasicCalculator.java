@@ -8,35 +8,36 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 
 import pl.cieslak.bartosz.projects.android.calculator.enums.OperationType;
+import pl.cieslak.bartosz.projects.android.calculator.exceptions.BadValueInCalculatorPanelException;
 
 public class BasicCalculator extends AppCompatActivity
 {
-    private static final char DOT = '.';
-    private static final char MINUS = '-';
-    private static final char ZERO = '0';
-    private final int QUANTITY_OF_BUTTONS_WITH_VALUES = 10;
-    private TextView calculatorPanel = null;
-    private Button[] valueButtons = new Button[QUANTITY_OF_BUTTONS_WITH_VALUES];
-    private Button clearAllButton = null;
-    private Button clearButton = null;
-    private Button changeSignButton = null;
-    private Button divideButton = null;
-    private Button multiplyButton = null;
-    private Button subtractButton = null;
-    private Button addButton = null;
-    private Button dotButton = null;
-    private Button equalButton = null;
-    private Button backToMainButton = null;
-    private String valueInPanel = null;
-    private Double result = null;
-    private OperationType operationType = null;
+    protected static final char DOT = '.';
+    protected static final char MINUS = '-';
+    protected static final char ZERO = '0';
+    protected final int QUANTITY_OF_BUTTONS_WITH_VALUES = 10;
+    protected Button[] valueButtons = new Button[QUANTITY_OF_BUTTONS_WITH_VALUES];
+    protected Button clearAllButton = null;
+    protected Button clearButton = null;
+    protected Button changeSignButton = null;
+    protected Button divideButton = null;
+    protected Button multiplyButton = null;
+    protected Button subtractButton = null;
+    protected Button addButton = null;
+    protected Button dotButton = null;
+    protected Button equalButton = null;
+    protected Button backToMainButton = null;
+    protected TextView calculatorPanel = null;
+    protected boolean resultInCalculatorPanel = false;
+    protected Double firstValue = null;
+    protected Double secondValue = null;
+    protected OperationType operationType = null;
+    protected Double lastResult = null;
 
-    public void prepareButtonHandlers()
+    private void prepareButtonHandlers()
     {
         this.calculatorPanel = findViewById(R.id.displayData);
         this.valueButtons[0] = findViewById(R.id.value0Button);
@@ -61,78 +62,24 @@ public class BasicCalculator extends AppCompatActivity
         this.backToMainButton = findViewById(R.id.backFromBasicCalculatorToMain);
     }
 
-    private void deactivateOperationsButtons()
-    {
-        this.addButton.setEnabled(false);
-        this.subtractButton.setEnabled(false);
-        this.multiplyButton.setEnabled(false);
-        this.divideButton.setEnabled(false);
-    }
-
-    private void activateOperationsButtons()
-    {
-        this.addButton.setEnabled(true);
-        this.subtractButton.setEnabled(true);
-        this.multiplyButton.setEnabled(true);
-        this.divideButton.setEnabled(true);
-    }
-
-    private void deactivateValueButtons()
-    {
-        for(Button button : this.valueButtons)
-            button.setEnabled(false);
-
-        this.dotButton.setEnabled(false);
-        this.changeSignButton.setEnabled(false);
-    }
-
-    private void activateValueButtons()
-    {
-        for(Button button : this.valueButtons)
-            button.setEnabled(true);
-
-        this.dotButton.setEnabled(true);
-        this.changeSignButton.setEnabled(true);
-    }
-
-    private void setDefaultButtonsSettings()
-    {
-        this.addButton.setEnabled(true);
-        this.subtractButton.setEnabled(true);
-        this.multiplyButton.setEnabled(true);
-        this.divideButton.setEnabled(true);
-        this.equalButton.setEnabled(false);
-
-        for(Button button : this.valueButtons)
-            button.setEnabled(true);
-
-        this.dotButton.setEnabled(true);
-        this.changeSignButton.setEnabled(true);
-    }
-
-    private void addExitTask()
-    {
-        this.backToMainButton.setOnClickListener(view -> finish());
-    }
-
-    public double roundValue(double value)
+    protected double roundValue(double value)
     {
         final int N = 10000000;
         return (double) Math.round(value * N) / N;
     }
 
-    public String getResultAsString()
+    protected String getResultAsString(Double value)
     {
-        if(result == null) return "";
+        if(value == null) return "";
 
         LinkedList<Character> characters = new LinkedList<>();
 
-        double tmpResult = roundValue(this.result);
+        double tmpResult = roundValue(value);
 
         for(Character character : Double.toString(tmpResult).toCharArray())
             characters.addLast(character);
 
-        if (characters.size() > 0 && characters.getLast().equals(ZERO))
+        if(characters.size() > 0 && characters.getLast().equals(ZERO))
             characters.removeLast();
 
         if(characters.getLast().equals(DOT)) characters.removeLast();
@@ -143,339 +90,336 @@ public class BasicCalculator extends AppCompatActivity
         return stringBuilder.toString();
     }
 
-    private void setValueInCalculatorPanel(String value)
+    protected Double convertStringToDouble(String value)
     {
-        this.valueInPanel = value;
-        this.calculatorPanel.setText(value);
+        Double result = null;
+
+        try
+        {
+            result = Double.valueOf(value);
+        }
+        catch(Exception exception)
+        {
+            return null;
+        }
+
+        return result;
     }
 
-    private void addClearTask()
-    {
-        this.clearAllButton.setOnClickListener(view ->
-        {
-            setValueInCalculatorPanel(null);
-            this.result = null;
-            setDefaultButtonsSettings();
-        });
-
-        this.clearButton.setOnClickListener(view ->
-        {
-            if(this.valueInPanel != null && !this.valueInPanel.trim().isEmpty())
-            {
-                if(this.result != null) this.calculatorPanel.setText(getResultAsString());
-                else this.calculatorPanel.setText(null);
-                valueInPanel = null;
-            }
-            else
-            {
-                this.result = null;
-                this.calculatorPanel.setText(null);
-                setDefaultButtonsSettings();
-            }
-        });
-    }
-
-    private void showToastWithInformation(String message)
+    protected void showToastWithInformation(String message)
     {
         if(message == null || message.trim().isEmpty()) return;
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private void addValueTasks()
+    private void addExitTask()
+    {
+        this.backToMainButton.setOnClickListener(view -> finish());
+    }
+
+    protected void addClearTask()
+    {
+        this.clearAllButton.setOnClickListener(view ->
+        {
+            this.calculatorPanel.setText("");
+            this.firstValue = null;
+            this.secondValue = null;
+            this.operationType = null;
+            this.lastResult = null;
+            this.resultInCalculatorPanel = false;
+        });
+
+        this.clearButton.setOnClickListener(view ->
+        {
+            if(resultInCalculatorPanel)
+            {
+                this.calculatorPanel.setText("");
+                this.firstValue = null;
+                this.secondValue = null;
+                this.operationType = null;
+                this.lastResult = null;
+                this.resultInCalculatorPanel = false;
+            }
+            if(lastResult != null)
+            {
+                this.firstValue = this.lastResult;
+                this.lastResult = null;
+                this.operationType = null;
+                this.secondValue = null;
+                this.calculatorPanel.setText(getResultAsString(this.firstValue));
+            }
+        });
+    }
+
+    protected void addValueTasks()
     {
         for(int i = 0; i < this.valueButtons.length; i++)
         {
             final int VALUE_OF_BUTTON = i;
+
             this.valueButtons[i].setOnClickListener(view ->
             {
-                String newValue = this.valueInPanel;
-
-                if(newValue == null || newValue.trim().isEmpty()) newValue = Integer.toString(VALUE_OF_BUTTON);
-                else
+                if(this.resultInCalculatorPanel)
                 {
-                    if(!newValue.trim().isEmpty() && newValue.startsWith(String.valueOf(ZERO)) && VALUE_OF_BUTTON == 0) return;
-                    newValue += Integer.toString(VALUE_OF_BUTTON);
+                    this.calculatorPanel.setText("");
+                    this.resultInCalculatorPanel = false;
                 }
 
-                setValueInCalculatorPanel(newValue);
+                String currentValue = this.calculatorPanel.getText().toString().trim();
+                StringBuilder stringBuilder = new StringBuilder();
+
+                if(VALUE_OF_BUTTON == 0)
+                {
+                    if(currentValue.isEmpty()) stringBuilder.append(ZERO).append(DOT);
+                    else stringBuilder.append(currentValue).append(ZERO);
+                }
+                else stringBuilder.append(currentValue).append(VALUE_OF_BUTTON);
+
+                this.calculatorPanel.setText(stringBuilder.toString());
             });
         }
 
         this.dotButton.setOnClickListener(view ->
         {
-            final String NO_INTEGER_MESSAGE = "Nie wprowadzono części całkowitej!";
-            final String DOT_EXISTS_MESSAGE = "Separator został już wprowadzony!";
-
-            if(this.valueInPanel == null || this.valueInPanel.trim().isEmpty())
-                showToastWithInformation(NO_INTEGER_MESSAGE);
-            else if(this.valueInPanel.contains(String.valueOf(DOT))) showToastWithInformation(DOT_EXISTS_MESSAGE);
-            else
+            if(this.resultInCalculatorPanel)
             {
-                String newValue = this.valueInPanel + DOT;
-                setValueInCalculatorPanel(newValue);
+                showToastWithInformation("Nie można dodać separatora do wyniku!");
+                return;
             }
+
+            String currentValue = this.calculatorPanel.getText().toString().trim();
+
+            if(currentValue.isEmpty())
+            {
+                showToastWithInformation("Ta operacja nie może zostać wykonana!");
+                return;
+            }
+
+            if(currentValue.contains(String.valueOf(DOT)))
+            {
+                showToastWithInformation("Separator został już dodany!");
+                return;
+            }
+
+            String result = currentValue + DOT;
+            this.calculatorPanel.setText(result);
         });
 
         this.changeSignButton.setOnClickListener(view ->
         {
-            final String NO_VALUE_MESSAGE = "Wprawadź wartość aby zmienić znak!";
-            final String VALUE_ENDS_WITH_DOT = "Wartość nie może kończyć się kropką!";
-            final String ZERO_WITH_MINUS_MESSAGE = "Nie można ustawić minusa dla zera!";
-
-            if(this.valueInPanel == null || this.valueInPanel.trim().isEmpty())
-                showToastWithInformation(NO_VALUE_MESSAGE);
-            else if(this.valueInPanel.endsWith(String.valueOf(DOT))) showToastWithInformation(VALUE_ENDS_WITH_DOT);
-            else if(this.valueInPanel.equals(String.valueOf(ZERO))) showToastWithInformation(ZERO_WITH_MINUS_MESSAGE);
-            else
+            if(this.resultInCalculatorPanel)
             {
-                if(valueInPanel.startsWith(String.valueOf(MINUS))) setValueInCalculatorPanel(this.valueInPanel.substring(1));
-                else setValueInCalculatorPanel(MINUS + this.valueInPanel);
+                showToastWithInformation("Nie można zmienić znaku dla wyniku!");
+                return;
             }
+
+            String currentValue = this.calculatorPanel.getText().toString().trim();
+
+            if(currentValue.isEmpty())
+            {
+                showToastWithInformation("Nie wprowadzono jeszcze wartości!");
+                return;
+            }
+
+            if(currentValue.endsWith(String.valueOf(DOT)))
+            {
+                showToastWithInformation("Wartość nie może kończyć się separatorem!");
+                return;
+            }
+
+            Double tmpValue = convertStringToDouble(currentValue);
+
+            if((tmpValue == null || tmpValue.equals(0.0D)) && !currentValue.startsWith(String.valueOf(MINUS)))
+            {
+                showToastWithInformation("Nie można zmienić znaku dla zera!");
+                return;
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if(currentValue.startsWith(String.valueOf(MINUS))) stringBuilder.append(currentValue.substring(1));
+            else stringBuilder.append(MINUS).append(currentValue);
+
+            this.calculatorPanel.setText(stringBuilder);
         });
     }
 
-    private void addOperationTasks()
+    protected void validValueInCalculatorPanel() throws BadValueInCalculatorPanelException
     {
-        final String VALUE_ENDS_WITH_DOT_MESSAGE = "Wartość nie może kończyć się separatorem!";
-        final String NO_VALUE_MESSAGE = "Nie została jeszcze wprowadzona wartość!";
-        final String CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE = "Nie udało się przetworzyć danych!";
-        final String DIVIDE_BY_ZERO_MESSAGE = "Nie można dzielić przez zero!";
+        String currentValueInCalculatorPanel = this.calculatorPanel.getText().toString().trim();
 
+        if(currentValueInCalculatorPanel.isEmpty())
+            throw new BadValueInCalculatorPanelException("Wartość nie może być pusta!");
+
+        if(currentValueInCalculatorPanel.endsWith(String.valueOf(DOT)))
+            throw new BadValueInCalculatorPanelException("Wartość nie może kończyć się separatorem");
+
+        Double value = convertStringToDouble(currentValueInCalculatorPanel);
+        if(value == null) throw new BadValueInCalculatorPanelException("Nieznany błąd!");
+    }
+
+    protected void addOperationTasks()
+    {
         this.addButton.setOnClickListener(view ->
         {
-            if((this.valueInPanel == null || this.valueInPanel.trim().isEmpty()) && this.result == null)
-            {
-                showToastWithInformation(NO_VALUE_MESSAGE);
-                return;
-            }
-            else if(this.valueInPanel != null && this.valueInPanel.endsWith(String.valueOf(DOT)))
-            {
-                showToastWithInformation(VALUE_ENDS_WITH_DOT_MESSAGE);
-                return;
-            }
-
-            if(result != null)
-            {
-                this.operationType = OperationType.ADD;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                activateValueButtons();
-                return;
-            }
-
-            Double tmpResult = null;
-
             try
             {
-                if(this.valueInPanel == null) throw new Exception(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
-                tmpResult = Double.valueOf(this.valueInPanel);
+                validValueInCalculatorPanel();
             }
-            catch (Exception exception)
+            catch(BadValueInCalculatorPanelException exception)
             {
-                showToastWithInformation(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
+                showToastWithInformation(exception.getMessage());
                 return;
             }
 
-            this.operationType = OperationType.ADD;
-            if(this.result == null)
+            if(this.lastResult == null)
             {
-                this.result = tmpResult;
-                this.valueInPanel = null;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                this.equalButton.setEnabled(true);
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
             }
+            else
+            {
+                this.firstValue = this.lastResult;
+                this.secondValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+
+
+            this.operationType = OperationType.ADD;
+            this.resultInCalculatorPanel = true;
         });
 
         this.subtractButton.setOnClickListener(view ->
         {
-            if((this.valueInPanel == null || this.valueInPanel.trim().isEmpty()) && this.result == null)
-            {
-                showToastWithInformation(NO_VALUE_MESSAGE);
-                return;
-            }
-            else if(this.valueInPanel != null && this.valueInPanel.endsWith(String.valueOf(DOT)))
-            {
-                showToastWithInformation(VALUE_ENDS_WITH_DOT_MESSAGE);
-                return;
-            }
-
-            if(result != null)
-            {
-                this.operationType = OperationType.SUBTRACT;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                activateValueButtons();
-                return;
-            }
-
-            Double tmpResult = null;
-
             try
             {
-                if(this.valueInPanel == null) throw new Exception(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
-                tmpResult = Double.valueOf(this.valueInPanel);
+                validValueInCalculatorPanel();
             }
-            catch (Exception exception)
+            catch(BadValueInCalculatorPanelException exception)
             {
-                showToastWithInformation(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
+                showToastWithInformation(exception.getMessage());
                 return;
+            }
+
+            if(this.lastResult == null)
+            {
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+            else
+            {
+                this.firstValue = this.lastResult;
+                this.secondValue = convertStringToDouble(this.calculatorPanel.getText().toString());
             }
 
             this.operationType = OperationType.SUBTRACT;
-            if(this.result == null)
-            {
-                this.result = tmpResult;
-                this.valueInPanel = null;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                this.equalButton.setEnabled(true);
-            }
+            this.resultInCalculatorPanel = true;
         });
 
         this.multiplyButton.setOnClickListener(view ->
         {
-            if((this.valueInPanel == null || this.valueInPanel.trim().isEmpty()) && this.result == null)
-            {
-                showToastWithInformation(NO_VALUE_MESSAGE);
-                return;
-            }
-            else if(this.valueInPanel != null && this.valueInPanel.endsWith(String.valueOf(DOT)))
-            {
-                showToastWithInformation(VALUE_ENDS_WITH_DOT_MESSAGE);
-                return;
-            }
-
-            if(result != null)
-            {
-                this.operationType = OperationType.MULTIPLY;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                activateValueButtons();
-                return;
-            }
-
-            Double tmpResult = null;
-
             try
             {
-                if(this.valueInPanel == null) throw new Exception(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
-                tmpResult = Double.valueOf(this.valueInPanel);
+                validValueInCalculatorPanel();
             }
-            catch (Exception exception)
+            catch(BadValueInCalculatorPanelException exception)
             {
-                showToastWithInformation(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
+                showToastWithInformation(exception.getMessage());
                 return;
+            }
+
+            if(this.lastResult == null)
+            {
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+            else
+            {
+                this.firstValue = this.lastResult;
+                this.secondValue = convertStringToDouble(this.calculatorPanel.getText().toString());
             }
 
             this.operationType = OperationType.MULTIPLY;
-            if(this.result == null)
-            {
-                this.result = tmpResult;
-                this.valueInPanel = null;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                this.equalButton.setEnabled(true);
-            }
+            this.resultInCalculatorPanel = true;
         });
 
         this.divideButton.setOnClickListener(view ->
         {
-            if((this.valueInPanel == null || this.valueInPanel.trim().isEmpty()) && this.result == null)
-            {
-                showToastWithInformation(NO_VALUE_MESSAGE);
-                return;
-            }
-            else if(this.valueInPanel != null && this.valueInPanel.endsWith(String.valueOf(DOT)))
-            {
-                showToastWithInformation(VALUE_ENDS_WITH_DOT_MESSAGE);
-                return;
-            }
-
-            if(result != null)
-            {
-                this.operationType = OperationType.DIVIDE;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                activateValueButtons();
-                return;
-            }
-
-            Double tmpResult = null;
-
             try
             {
-                if(this.valueInPanel == null) throw new Exception(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
-                tmpResult = Double.valueOf(this.valueInPanel);
+                validValueInCalculatorPanel();
             }
-            catch (Exception exception)
+            catch(BadValueInCalculatorPanelException exception)
             {
-                showToastWithInformation(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
+                showToastWithInformation(exception.getMessage());
                 return;
+            }
+
+            if(this.lastResult == null)
+            {
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+            else
+            {
+                this.firstValue = this.lastResult;
+                this.secondValue = convertStringToDouble(this.calculatorPanel.getText().toString());
             }
 
             this.operationType = OperationType.DIVIDE;
-            if(this.result == null)
-            {
-                this.result = tmpResult;
-                this.valueInPanel = null;
-                this.equalButton.setEnabled(true);
-                deactivateOperationsButtons();
-                this.equalButton.setEnabled(true);
-            }
+            this.resultInCalculatorPanel = true;
         });
 
         this.equalButton.setOnClickListener(view ->
         {
-            if(this.valueInPanel == null || this.valueInPanel.trim().isEmpty())
+            if(this.firstValue == null)
             {
-                showToastWithInformation(NO_VALUE_MESSAGE);
+                showToastWithInformation("Nie można wykonać teraz tej operacji!");
                 return;
             }
-            else if(this.valueInPanel.endsWith(String.valueOf(DOT)))
-            {
-                showToastWithInformation(VALUE_ENDS_WITH_DOT_MESSAGE);
-                return;
-            }
-
-            Double tmpValue = null;
 
             try
             {
-                tmpValue = Double.valueOf(this.valueInPanel);
+                validValueInCalculatorPanel();
             }
-            catch(Exception exception)
+            catch(BadValueInCalculatorPanelException exception)
             {
-                showToastWithInformation(CONVERSION_FROM_STRING_TO_DOUBLE_ERROR_MESSAGE);
+                showToastWithInformation(exception.getMessage());
                 return;
             }
 
-            switch (this.operationType)
+            if(this.secondValue == null)
+            {
+                this.secondValue = this.firstValue;
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+            else
+            {
+                this.firstValue = convertStringToDouble(this.calculatorPanel.getText().toString());
+            }
+
+            if(this.operationType == OperationType.DIVIDE && firstValue.equals(0.0D))
+            {
+                showToastWithInformation("Nie można dzielić przez zero!");
+                return;
+            }
+
+            double tmpValue = 0.0D;
+
+            switch(this.operationType)
             {
                 case ADD:
-                    this.result = roundValue(this.result + tmpValue);
+                    tmpValue = this.secondValue + this.firstValue;
                     break;
                 case SUBTRACT:
-                    this.result = roundValue(this.result - tmpValue);
+                    tmpValue = this.secondValue - this.firstValue;
                     break;
                 case MULTIPLY:
-                    this.result = roundValue(this.result * tmpValue);
+                    tmpValue = this.secondValue * this.firstValue;
                     break;
                 case DIVIDE:
-                    if(tmpValue == 0)
-                    {
-                        showToastWithInformation(DIVIDE_BY_ZERO_MESSAGE);
-                        return;
-                    }
-                    this.result = roundValue(this.result / tmpValue);
+                    tmpValue = this.secondValue / this.firstValue;
                     break;
             }
 
-            this.valueInPanel = null;
-            deactivateValueButtons();
-            activateOperationsButtons();
-            this.equalButton.setEnabled(false);
-            this.calculatorPanel.setText(Double.toString(this.result));
+            this.lastResult = roundValue(tmpValue);
+            this.calculatorPanel.setText(getResultAsString(this.lastResult));
+            this.resultInCalculatorPanel = true;
         });
     }
 
@@ -490,7 +434,6 @@ public class BasicCalculator extends AppCompatActivity
     private void initButtons()
     {
         prepareButtonHandlers();
-        setDefaultButtonsSettings();
         addTasksToButtons();
     }
 
@@ -503,44 +446,23 @@ public class BasicCalculator extends AppCompatActivity
 
         if(savedInstanceState != null)
         {
-            this.valueInPanel = savedInstanceState.getString("valueInPanel");
             this.calculatorPanel.setText(savedInstanceState.getString("calculatorPanel"));
-            this.result = savedInstanceState.getDouble("result");
+            this.firstValue = savedInstanceState.getDouble("firstValue");
+            this.secondValue = savedInstanceState.getDouble("secondValue");
+            this.lastResult = savedInstanceState.getDouble("lastResult");
             this.operationType = (OperationType) savedInstanceState.getSerializable("operationType");
-            this.clearAllButton.setEnabled(savedInstanceState.getBoolean("clearAllButton"));
-            this.clearButton.setEnabled(savedInstanceState.getBoolean("clearButton"));
-            this.changeSignButton.setEnabled(savedInstanceState.getBoolean("changeSignButton"));
-            this.divideButton.setEnabled(savedInstanceState.getBoolean("divideButton"));
-            this.multiplyButton.setEnabled(savedInstanceState.getBoolean("multiplyButton"));
-            this.subtractButton.setEnabled(savedInstanceState.getBoolean("subtractButton"));
-            this.addButton.setEnabled(savedInstanceState.getBoolean("addButton"));
-            this.dotButton.setEnabled(savedInstanceState.getBoolean("dotButton"));
-            this.equalButton.setEnabled(savedInstanceState.getBoolean("equalButton"));
-
-            for(int i = 0; i < this.valueButtons.length; i++)
-                this.valueButtons[i].setEnabled(savedInstanceState.getBoolean("value" + i + "Button"));
         }
     }
+
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState)
     {
         super.onSaveInstanceState(outState);
-        outState.putString("valueInPanel", this.valueInPanel);
-        outState.putString("calculatorPanel", (String) this.calculatorPanel.getText());
-        if(result != null) outState.putDouble("result", this.result);
+        outState.putString("calculatorPanel", this.calculatorPanel.getText().toString());
+        if(this.firstValue != null) outState.putDouble("firstValue", this.firstValue);
+        if(this.secondValue != null) outState.putDouble("secondValue", this.secondValue);
+        if(this.lastResult != null) outState.putDouble("lastResult", this.lastResult);
         outState.putSerializable("operationType", this.operationType);
-        outState.putBoolean("clearAllButton", this.clearAllButton.isEnabled());
-        outState.putBoolean("clearButton", this.clearButton.isEnabled());
-        outState.putBoolean("changeSignButton", this.changeSignButton.isEnabled());
-        outState.putBoolean("divideButton", this.divideButton.isEnabled());
-        outState.putBoolean("multiplyButton", this.multiplyButton.isEnabled());
-        outState.putBoolean("subtractButton", this.subtractButton.isEnabled());
-        outState.putBoolean("addButton", this.addButton.isEnabled());
-        outState.putBoolean("dotButton", this.dotButton.isEnabled());
-        outState.putBoolean("equalButton", this.equalButton.isEnabled());
-
-        for(int i = 0; i < this.valueButtons.length; i++)
-            outState.putBoolean("value" + i + "Button", this.valueButtons[i].isEnabled());
     }
 }
