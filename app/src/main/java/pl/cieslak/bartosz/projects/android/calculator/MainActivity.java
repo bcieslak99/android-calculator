@@ -26,6 +26,12 @@ public class MainActivity extends AppCompatActivity
             startActivity(aboutActivity);
         });
 
+        this.advancedCalculatorButton.setOnClickListener(view ->
+        {
+            Intent aboutActivity = new Intent(getApplicationContext(), AdvancedCalculator.class);
+            startActivity(aboutActivity);
+        });
+
         this.aboutButton.setOnClickListener(view ->
         {
             Intent aboutActivity = new Intent(getApplicationContext(), About.class);

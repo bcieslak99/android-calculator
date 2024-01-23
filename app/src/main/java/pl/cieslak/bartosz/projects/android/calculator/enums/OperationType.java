@@ -7,5 +7,6 @@ public enum OperationType implements Serializable
     ADD,
     SUBTRACT,
     MULTIPLY,
-    DIVIDE
+    DIVIDE,
+    POW
 }

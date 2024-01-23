@@ -37,31 +37,6 @@ public class BasicCalculator extends AppCompatActivity
     protected OperationType operationType = null;
     protected Double lastResult = null;
 
-    private void prepareButtonHandlers()
-    {
-        this.calculatorPanel = findViewById(R.id.displayData);
-        this.valueButtons[0] = findViewById(R.id.value0Button);
-        this.valueButtons[1] = findViewById(R.id.value1Button);
-        this.valueButtons[2] = findViewById(R.id.value2Button);
-        this.valueButtons[3] = findViewById(R.id.value3Button);
-        this.valueButtons[4] = findViewById(R.id.value4Button);
-        this.valueButtons[5] = findViewById(R.id.value5Button);
-        this.valueButtons[6] = findViewById(R.id.value6Button);
-        this.valueButtons[7] = findViewById(R.id.value7Button);
-        this.valueButtons[8] = findViewById(R.id.value8Button);
-        this.valueButtons[9] = findViewById(R.id.value9Button);
-        this.clearButton = findViewById(R.id.clearButton);
-        this.clearAllButton = findViewById(R.id.clearAllButton);
-        this.changeSignButton = findViewById(R.id.changeSign);
-        this.divideButton = findViewById(R.id.divideButton);
-        this.multiplyButton = findViewById(R.id.multiplyButton);
-        this.subtractButton = findViewById(R.id.subtractButton);
-        this.addButton = findViewById(R.id.addButton);
-        this.dotButton = findViewById(R.id.dotButton);
-        this.equalButton = findViewById(R.id.equalsButton);
-        this.backToMainButton = findViewById(R.id.backFromBasicCalculatorToMain);
-    }
-
     protected double roundValue(double value)
     {
         final int N = 10000000;
@@ -112,7 +87,7 @@ public class BasicCalculator extends AppCompatActivity
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private void addExitTask()
+    protected void addExitTask()
     {
         this.backToMainButton.setOnClickListener(view -> finish());
     }
@@ -258,7 +233,7 @@ public class BasicCalculator extends AppCompatActivity
         if(value == null) throw new BadValueInCalculatorPanelException("Nieznany błąd!");
     }
 
-    protected void addOperationTasks()
+    protected void addBasicOperationTasks()
     {
         this.addButton.setOnClickListener(view ->
         {
@@ -415,6 +390,9 @@ public class BasicCalculator extends AppCompatActivity
                 case DIVIDE:
                     tmpValue = this.secondValue / this.firstValue;
                     break;
+                case POW:
+                    tmpValue = Math.pow(this.secondValue, this.firstValue);
+                    break;
             }
 
             this.lastResult = roundValue(tmpValue);
@@ -423,27 +401,8 @@ public class BasicCalculator extends AppCompatActivity
         });
     }
 
-    private void addTasksToButtons()
+    protected void restoreInstanceState(Bundle savedInstanceState)
     {
-        addExitTask();
-        addClearTask();
-        addValueTasks();
-        addOperationTasks();
-    }
-
-    private void initButtons()
-    {
-        prepareButtonHandlers();
-        addTasksToButtons();
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_basic_calculator);
-        initButtons();
-
         if(savedInstanceState != null)
         {
             this.calculatorPanel.setText(savedInstanceState.getString("calculatorPanel"));
@@ -452,6 +411,47 @@ public class BasicCalculator extends AppCompatActivity
             this.lastResult = savedInstanceState.getDouble("lastResult");
             this.operationType = (OperationType) savedInstanceState.getSerializable("operationType");
         }
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_basic_calculator);
+
+        if(savedInstanceState != null && savedInstanceState.getBoolean("adv"))
+        {
+            setContentView(R.layout.activity_advanced_calculator);
+        }
+
+        this.calculatorPanel = findViewById(R.id.displayData);
+        this.valueButtons[0] = findViewById(R.id.value0Button);
+        this.valueButtons[1] = findViewById(R.id.value1Button);
+        this.valueButtons[2] = findViewById(R.id.value2Button);
+        this.valueButtons[3] = findViewById(R.id.value3Button);
+        this.valueButtons[4] = findViewById(R.id.value4Button);
+        this.valueButtons[5] = findViewById(R.id.value5Button);
+        this.valueButtons[6] = findViewById(R.id.value6Button);
+        this.valueButtons[7] = findViewById(R.id.value7Button);
+        this.valueButtons[8] = findViewById(R.id.value8Button);
+        this.valueButtons[9] = findViewById(R.id.value9Button);
+        this.clearButton = findViewById(R.id.clearButton);
+        this.clearAllButton = findViewById(R.id.clearAllButton);
+        this.changeSignButton = findViewById(R.id.changeSign);
+        this.divideButton = findViewById(R.id.divideButton);
+        this.multiplyButton = findViewById(R.id.multiplyButton);
+        this.subtractButton = findViewById(R.id.subtractButton);
+        this.addButton = findViewById(R.id.addButton);
+        this.dotButton = findViewById(R.id.dotButton);
+        this.equalButton = findViewById(R.id.equalsButton);
+        this.backToMainButton = findViewById(R.id.backFromBasicCalculatorToMain);
+
+        addExitTask();
+        addClearTask();
+        addValueTasks();
+        addBasicOperationTasks();
+
+        restoreInstanceState(savedInstanceState);
     }
 
 
